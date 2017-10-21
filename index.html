@@ -18,16 +18,28 @@
             <div class="card-body">
               <h4 class="card-title">Point of Interest 1</h4>
               <label for="POI1Radius"> radius = <span id="POI1Radius-value">…</span> </label>
+              <br>
               <input type="range" min="1" max="150" id="POI1Radius">
             </div>
           </div>
+
           <div class="card" style="width: 20rem;">
             <div class="card-body">
               <h4 class="card-title">Point of Interest 2</h4>
               <label for="POI2Radius"> radius = <span id="POI2Radius-value">…</span> </label>
+              <br>
               <input type="range" min="1" max="150" id="POI2Radius">
             </div>
           </div>
+
+          <div class="card" style="width: 20rem;">
+            <div class="card-body">
+              <h4 class="card-title"> Select DBH Range  </h4>
+          
+            </div>
+          </div>
+
+
         </div> 
       </div>
     </div>
@@ -154,7 +166,7 @@
         .attr("cy", 150) 
         .style("fill", "blue")   
         .style("stroke", "blue")
-        .style("opacity", .1) 
+        .style("opacity", .05) 
         .datum({x: 300, y: 150}) 
         .attr("r", 120)
         .attr("id", function(d){ return "POI1"; })
@@ -165,7 +177,7 @@
         .attr("cy", 75) 
         .style("fill", "blue")   
         .style("stroke", "blue")
-        .style("opacity", .1)
+        .style("opacity", .05)
         .datum({x: 200, y: 75}) 
         .attr("r", 120)
         .attr("id", function(d){ return "POI2"; })  
@@ -178,6 +190,9 @@
       d3.select("#POI2Radius").on("input", function() {
         updatePOIRadius(+this.value, '#POI2Radius-value', '#POI2Radius', '#POI2');
       });
+
+      updatePOIRadius(80, '#POI1Radius-value', '#POI1Radius', '#POI1');
+      updatePOIRadius(80, '#POI2Radius-value', '#POI2Radius', '#POI2');
 
       svg.select("#POI1")
             .call(d3.drag()
@@ -194,8 +209,11 @@
       // update the point of interest radius
       function updatePOIRadius(POIRadius, labelID, inputID, circleID) {
         // adjust the text on the range slider
-        d3.select(labelID).text(POIRadius);
-        d3.select(inputID).property("value", POIRadius);
+        d3.select(labelID)
+          .text(POIRadius);
+
+        d3.select(inputID)
+          .property("value", POIRadius);
 
         // update the rircle radius
         svg.select(circleID) 
@@ -203,15 +221,20 @@
       }
 
       function dragstarted(d) {
-        d3.select(this).raise().classed("active", true);
+        d3.select(this)
+          .raise()
+          .classed("active", true);
       }
 
       function dragged(d) {
-        d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+        d3.select(this)
+          .attr("cx", d.x = d3.event.x)
+          .attr("cy", d.y = d3.event.y);
       }
 
       function dragended(d) {
-        d3.select(this).classed("active", false);
+        d3.select(this)
+          .classed("active", false);
       }
 
       ////////// POI CODE END /////////////
