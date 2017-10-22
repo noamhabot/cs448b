@@ -64,12 +64,14 @@
       svg.append('image')
         .attr('width', mapWidth)
         .attr('height', mapHeight)
-        .attr('xlink:href', 'sf-map.svg');
+        .attr('xlink:href', 'sf-map.svg')
+          .call(d3.zoom().on("zoom", function () {
+          svg.attr("transform", d3.event.transform)}));
+          // This is pretty slow cause it's translating so many points  
 
       let plot = svg.append('g').attr('transform', `translate(0,0)`);
 
       d3.csv('trees.csv', parseInputRow, loadData);
-    
 
       // Convert weight and height from strings to numbers
       function parseInputRow (d) {
@@ -206,9 +208,9 @@
               .on("drag", dragged)
               .on("end", dragended));
 
-      // update the point of interest radius
       function updatePOIRadius(POIRadius, labelID, inputID, circleID) {
         // adjust the text on the range slider
+        // will need to convert units to miles 
         d3.select(labelID)
           .text(POIRadius);
 
@@ -239,7 +241,7 @@
 
       ////////// POI CODE END /////////////
 
-        
+   
 
       
 
