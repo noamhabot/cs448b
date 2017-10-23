@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>😸 vs. 🐶 stats</title>
+    <title>NB Deal</title>
     <style>
       h1 {
         font-size: 50px;
@@ -21,7 +21,7 @@
   </head>
   <body>
     <p>
-      <label for="nRadius" 
+      <label for="nRadius"
              style="display: inline-block; width: 240px; text-align: right">
              radius = <span id="nRadius-value">…</span>
       </label>
@@ -100,7 +100,8 @@
           // e.g. document.querySelectorAll('button') ... addEventListener ...
           // D3 just provides convenient methods for operating on DOM nodes
           // through its selections
-          let ranges = d3.selectAll('input');
+          d3.select("#test").on('change', function() {console.log("WOOT")});
+          /*let ranges = d3.selectAll('input');
           ranges.on('change', function() {
             // When you write a function for a D3 selection with multiple nodes
             // `this` refers to the current DOM node
@@ -111,9 +112,9 @@
               filteredData = animalData;
             } else {
               filteredData = animalData.filter( d => d.animal === chosenAnimal );
-            }*/
+            }
             drawScatterPlot(data);
-          });
+          });*/
         }
 
         function drawScatterPlot(data) {
@@ -144,7 +145,7 @@
             .attr('cx', function (d) { return projection([d.Longitude, d.Latitude])[0]; })
             .attr('cy', function (d) { return projection([d.Longitude, d.Latitude])[1]; })
             .attr('r', 1);
-            
+
 
 
           // Now we'll select all the circles that no longer
@@ -157,20 +158,20 @@
         // draw the circle
         svg.append("circle")
           .attr("cx", 300)
-          .attr("cy", 150) 
-          .style("fill", "none")   
-          .style("stroke", "blue") 
+          .attr("cy", 150)
+          .style("fill", "none")
+          .style("stroke", "blue")
           .attr("r", 120)
           .attr("id", function(d){ return "POI"; })
           .append("g")
-          
 
-        // when the input range changes update the circle 
+
+        // when the input range changes update the circle
         d3.select("#nRadius").on("input", function() {
           update(+this.value);
         });
 
-        // Initial starting radius of the circle 
+        // Initial starting radius of the circle
         update(120);
 
         // update the elements
@@ -181,7 +182,7 @@
           d3.select("#nRadius").property("value", nRadius);
 
           // update the rircle radius
-          svg.select("#POI") 
+          svg.select("#POI")
             .attr("r", nRadius);
         }
 
