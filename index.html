@@ -1,33 +1,57 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>NB Deal</title>
-    <style>
-      h1 {
-        font-size: 50px;
-        font-family: Helvetica, sans-serif;
-      }
-      button#cats-only {
-        background-color: steelblue;
-      }
-      button#dogs-only {
-        background-color: salmon;
-      }
-      button#both {
-        background-color: grey;
-      }
-    </style>
+    <title>Tree Visualization</title>
     <script src="https://d3js.org/d3.v4.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
   </head>
   <body>
-    <p>
-      <label for="nRadius"
-             style="display: inline-block; width: 240px; text-align: right">
-             radius = <span id="nRadius-value">…</span>
-      </label>
-      <input type="range" min="1" max="150" id="nRadius">
-    </p>
-    <input id="test" type="range"/>
+    <h1 align="center"> Trees in San Francisco</h1>
+    <div class="container">
+      <div class="row">
+        <div class="col-9">
+          <div id="svg-container">
+          </div>
+        </div>
+        <div class="col-3">
+          <div class="card" style="width: 20rem;">
+            <div class="card-body">
+              <h4 class="card-title">Point of Interest 1</h4>
+              <label for="POI1Radius"> radius = <span id="POI1Radius-value">…</span> </label>
+              <br>
+              <input type="range" min="1" max="150" id="POI1Radius">
+            </div>
+          </div>
+
+          <div class="card" style="width: 20rem;">
+            <div class="card-body">
+              <h4 class="card-title">Point of Interest 2</h4>
+              <label for="POI2Radius"> radius = <span id="POI2Radius-value">…</span> </label>
+              <br>
+              <input type="range" min="1" max="150" id="POI2Radius">
+            </div>
+          </div>
+
+          <div class="card" style="width: 20rem;">
+            <div class="card-body">
+              <h4 class="card-title"> Input DBH Range  </h4>
+              <input type="number" id="DBHRangeMin" placeholder="Min">
+              <input type="number" id="DBHRangeMax" placeholder="Max">
+            </div>
+          </div>
+
+          <div class="card" style="width: 20rem;">
+            <div class="card-body">
+              <h4 class="card-title"> Instructions  </h4>
+              You may drag around the two circles representing the POI's (Points of Interest). These serve as filters and the map will only show points within these two circles. You may resize them using the sliders above.
+            </div>
+          </div>
+
+
+        </div>
+      </div>
+    </div>
     <script>
 
       // Set up size
@@ -40,13 +64,8 @@
         .scale(225000)
         .translate([mapWidth / 2, mapHeight / 2]);
 
-      // This is the mapping between <longitude, latitude> position to <x, y> pixel position on the map
-      // projection is a function and it has an inverse:
-      // projection([lon, lat]) returns [x, y]
-      // projection.invert([x, y]) returns [lon, lat]
-
       // Add an SVG element to the DOM
-      var svg = d3.select('body').append('svg')
+      var svg = d3.select('#svg-container').append('svg')
         .attr('width', mapWidth)
         .attr('height', mapHeight);
 
@@ -54,140 +73,190 @@
       svg.append('image')
         .attr('width', mapWidth)
         .attr('height', mapHeight)
-        .attr('xlink:href', 'sf-map.svg');
+        .attr('xlink:href', 'sf-map.svg')
+          .call(d3.zoom().on("zoom",
+            function () { svg.attr("transform", d3.event.transform) }));
+            // I wonder if it's possible to make this faster? ^
 
-        let plot = svg.append('g').attr('transform', `translate(0,0)`);
+      let plot = svg.append('g').attr('transform', `translate(0,0)`);
 
-      /*var projectedLocation = projection([-122.433701, 37.767683]);// [treeLon, treeLat]);
-      console.log(projectedLocation);
-      var circle = svg.append('circle')
-        .attr('cx', projectedLocation[0])
-        .attr('cy', projectedLocation[1])
-        .attr('r', 5);*/
+      d3.csv('trees.csv', parseInputRow, loadData);
 
-        d3.csv('trees.csv', parseInputRow, loadData);
+      // Convert weight and height from strings to numbers
+      function parseInputRow (d) {
+        return {
+          TreeID: +d.TreeID,
+          qSpecies: d.qSpecies,
+          qAddress: d.qAddress,
+          qSiteInfo: d.qSiteInfo,
+          DBH: +d.DBH,
+          PlotSize: d.PlotSize,
+          Latitude: +d.Latitude,
+          Longitude: +d.Longitude
+        };
+      }
 
+      function loadData (error, data) {
+        if (error) throw error; // Runs if there's a problem fetching the csv.
 
-        // Convert weight and height from strings to numbers
-        function parseInputRow (d) {
-          return {
-            TreeID: +d.TreeID,
-            qSpecies: d.qSpecies,
-            qAddress: d.qAddress,
-            qSiteInfo: d.qSiteInfo,
-            DBH: +d.DBH,
-            PlotSize: d.PlotSize,
-            Latitude: +d.Latitude,
-            Longitude: +d.Longitude
-          };
-        }
+        // data looks like
+        // [
+        //   {TreeID: "cat", qSpecies: 10, qAddress: 3},
+        //   {animal: "cat", weight: 3, height: 3},
+        //   ...
+        // ]
 
-        function loadData (error, data) {
-          if (error) throw error; // Runs if there's a problem fetching the csv.
+        // Draw the initial scatter plot
+        drawScatterPlot(data);
 
-          // data looks like
-          // [
-          //   {TreeID: "cat", qSpecies: 10, qAddress: 3},
-          //   {animal: "cat", weight: 3, height: 3},
-          //   ...
-          // ]
-
-          // Draw the initial scatter plot
+        // Set up event handlers for our buttons.
+        // You could also do this with plain JavaScript!
+        // e.g. document.querySelectorAll('button') ... addEventListener ...
+        // D3 just provides convenient methods for operating on DOM nodes
+        // through its selections
+        let ranges = d3.selectAll('input');
+        ranges.on('change', function() {
+          // When you write a function for a D3 selection with multiple nodes
+          // `this` refers to the current DOM node
+          console.log("change");
+          /*let chosenAnimal = this.dataset.filter; // value of `data-filter` attr
+          let filteredData;
+          if (chosenAnimal === 'both') {
+            filteredData = animalData;
+          } else {
+            filteredData = animalData.filter( d => d.animal === chosenAnimal );
+          }*/
           drawScatterPlot(data);
-
-          // Set up event handlers for our buttons.
-          // You could also do this with plain JavaScript!
-          // e.g. document.querySelectorAll('button') ... addEventListener ...
-          // D3 just provides convenient methods for operating on DOM nodes
-          // through its selections
-          d3.select("#test").on('change', function() {console.log("WOOT")});
-          /*let ranges = d3.selectAll('input');
-          ranges.on('change', function() {
-            // When you write a function for a D3 selection with multiple nodes
-            // `this` refers to the current DOM node
-            console.log("change");
-            /*let chosenAnimal = this.dataset.filter; // value of `data-filter` attr
-            let filteredData;
-            if (chosenAnimal === 'both') {
-              filteredData = animalData;
-            } else {
-              filteredData = animalData.filter( d => d.animal === chosenAnimal );
-            }
-            drawScatterPlot(data);
-          });*/
-        }
-
-        function drawScatterPlot(data) {
-          // Create a selection of circles in our plot (empty on the first go)
-          let circles = plot.selectAll('circle');
-          // Bind our animal data to the circles, using the "id" field as our key
-          let updatedCircles = circles.data(data, d => d.TreeID);
-
-          // Could also set the key to "name"!
-          // The key for each datapoint can be anything, ideally a unique feature of each datum.
-          // If we already have circles that have data joined, D3 will compare the keys
-          // of each of those with the keys of the joined data to see:
-          // * Does our dataset have datums that aren't already represented by nodes? (we can `enter` these)
-          // * Are there nodes which no longer have corresponding datums in the dataset? (we can `exit` these)
-          // * Are there nodes whose keys match the keys of the dataset? (these are the `update` selection)
-          // By default, D3 uses the index in the data array, in our example that won't work.
-
-          // We'll use "enter" to make circles for new datapoints
-          // From https://github.com/d3/d3-selection#selection_enter :
-          // "The enter selection is typically used to create 'missing' elements corresponding to new data."
-          // "[The selection comprises] placeholder nodes for each datum that had no corresponding DOM element in the selection."
-          // "Conceptually, the enter selection’s placeholders are pointers to the parent element"
-          let enterSelection = updatedCircles.enter();
-          //let projectedLocation = projection([d.Longitude, d.Latitude]); // [treeLon, treeLat]);
-
-
-          var circle = enterSelection.append('circle')
-            .attr('cx', function (d) { return projection([d.Longitude, d.Latitude])[0]; })
-            .attr('cy', function (d) { return projection([d.Longitude, d.Latitude])[1]; })
-            .attr('r', 1);
-
-
-
-          // Now we'll select all the circles that no longer
-          // have any corresponding data after the data join
-          let unselectedCircles = updatedCircles.exit();
-          // And we'll remove those nodes form the DOM - poof!
-          updatedCircles.exit().remove();
-        }
-
-        // draw the circle
-        svg.append("circle")
-          .attr("cx", 300)
-          .attr("cy", 150)
-          .style("fill", "none")
-          .style("stroke", "blue")
-          .attr("r", 120)
-          .attr("id", function(d){ return "POI"; })
-          .append("g")
-
-
-        // when the input range changes update the circle
-        d3.select("#nRadius").on("input", function() {
-          update(+this.value);
         });
+      }
 
-        // Initial starting radius of the circle
-        update(120);
+      function drawScatterPlot(data) {
+        // Create a selection of circles in our plot (empty on the first go)
+        let circles = plot.selectAll('circle');
+        // Bind our animal data to the circles, using the "id" field as our key
+        let updatedCircles = circles.data(data, d => d.TreeID);
 
-        // update the elements
-        function update(nRadius) {
+        // Could also set the key to "name"!
+        // The key for each datapoint can be anything, ideally a unique feature of each datum.
+        // If we already have circles that have data joined, D3 will compare the keys
+        // of each of those with the keys of the joined data to see:
+        // * Does our dataset have datums that aren't already represented by nodes? (we can `enter` these)
+        // * Are there nodes which no longer have corresponding datums in the dataset? (we can `exit` these)
+        // * Are there nodes whose keys match the keys of the dataset? (these are the `update` selection)
+        // By default, D3 uses the index in the data array, in our example that won't work.
 
-          // adjust the text on the range slider
-          d3.select("#nRadius-value").text(nRadius);
-          d3.select("#nRadius").property("value", nRadius);
+        // We'll use "enter" to make circles for new datapoints
+        // From https://github.com/d3/d3-selection#selection_enter :
+        // "The enter selection is typically used to create 'missing' elements corresponding to new data."
+        // "[The selection comprises] placeholder nodes for each datum that had no corresponding DOM element in the selection."
+        // "Conceptually, the enter selection’s placeholders are pointers to the parent element"
+        let enterSelection = updatedCircles.enter();
+        //let projectedLocation = projection([d.Longitude, d.Latitude]); // [treeLon, treeLat]);
 
-          // update the rircle radius
-          svg.select("#POI")
-            .attr("r", nRadius);
-        }
+
+        var circle = enterSelection.append('circle')
+          .attr('cx', function (d) { return projection([d.Longitude, d.Latitude])[0]; })
+          .attr('cy', function (d) { return projection([d.Longitude, d.Latitude])[1]; })
+          .attr('r', 0.5);
+
+
+
+        // Now we'll select all the circles that no longer
+        // have any corresponding data after the data join
+        let unselectedCircles = updatedCircles.exit();
+        // And we'll remove those nodes form the DOM - poof!
+        updatedCircles.exit().remove();
+      }
+
+
+      ////////// POI CODE START /////////
+
+      // draw POI 1
+      var PointOfInteret1 = svg.append("circle")
+        .attr("cx", 300)
+        .attr("cy", 150)
+        .style("fill", "blue")
+        .style("stroke", "blue")
+        .style("fill-opacity", .01)
+        .datum({x: 300, y: 150})
+        .attr("r", 120)
+        .attr("id", function(d){ return "POI1"; })
+
+      // draw POI 2
+      var PointOfInteret2 = svg.append("circle")
+        .attr("cx", 200)
+        .attr("cy", 75)
+        .style("fill", "blue")
+        .style("stroke", "blue")
+        .style("fill-opacity", .01)
+        .datum({x: 200, y: 75})
+        .attr("r", 120)
+        .attr("id", function(d){ return "POI2"; })
+
+      // when the input range changes update POI radius
+      d3.select("#POI1Radius").on("input", function() {
+        updatePOIRadius(+this.value, '#POI1Radius-value', '#POI1Radius', '#POI1');
+      });
+
+      d3.select("#POI2Radius").on("input", function() {
+        updatePOIRadius(+this.value, '#POI2Radius-value', '#POI2Radius', '#POI2');
+      });
+
+      updatePOIRadius(80, '#POI1Radius-value', '#POI1Radius', '#POI1');
+      updatePOIRadius(80, '#POI2Radius-value', '#POI2Radius', '#POI2');
+
+      svg.select("#POI1")
+            .call(d3.drag()
+              .on("start", dragstarted)
+              .on("drag", dragged)
+              .on("end", dragended));
+
+      svg.select("#POI2")
+            .call(d3.drag()
+              .on("start", dragstarted)
+              .on("drag", dragged)
+              .on("end", dragended));
+
+      function updatePOIRadius(POIRadius, labelID, inputID, circleID) {
+        // adjust the text on the range slider
+        // will need to convert units to miles
+        d3.select(labelID)
+          .text(POIRadius);
+
+        d3.select(inputID)
+          .property("value", POIRadius);
+
+        // update the rircle radius
+        svg.select(circleID)
+          .attr("r", POIRadius);
+      }
+
+      function dragstarted(d) {
+        d3.select(this)
+          .raise()
+          .classed("active", true);
+      }
+
+      function dragged(d) {
+        d3.select(this)
+          .attr("cx", d.x = d3.event.x)
+          .attr("cy", d.y = d3.event.y);
+      }
+
+      function dragended(d) {
+        d3.select(this)
+          .classed("active", false);
+      }
+
+      ////////// POI CODE END /////////////
+
+
 
 
 
     </script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
   </body>
 </html>
