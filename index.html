@@ -14,20 +14,36 @@
           </div>
         </div>
         <div class="col-3">
+           <div class="card" style="width: 20rem;">
+            <div class="card-body">
+              <h4 class="card-title"> Instructions  </h4>
+              You may drag around the two circles representing the POI's (Points of Interest). These serve as filters and the map will only show points within these two circles. You may resize them using the sliders below.
+            </div>
+          </div> 
           <div class="card" style="width: 20rem;">
             <div class="card-body">
               <h4 class="card-title">Point of Interest 1</h4>
-              <label for="POI1Radius"> radius = <span id="POI1Radius-value">…</span> </label>
+              <label for="POI1Toggle"> enable </label>
+              <input id="POI1Toggle" type="checkbox">
               <br>
-              <input type="range" min="1" max="150" id="POI1Radius">
+              <div id="POI1InputContainer">
+                <label for="POI1Radius"> radius = <span id="POI1Radius-value">…</span> </label>
+                <br>
+                <input type="range" min="1" max="300" id="POI1Radius">
+              </div>
             </div>
           </div>
           <div class="card" style="width: 20rem;">
             <div class="card-body">
               <h4 class="card-title">Point of Interest 2</h4>
-              <label for="POI2Radius"> radius = <span id="POI2Radius-value">…</span> </label>
+              <label for="POI2Toggle"> enable </label>
+              <input id="POI2Toggle" type="checkbox">
               <br>
-              <input type="range" min="1" max="150" id="POI2Radius">
+              <div id="POI2InputContainer">              
+                <label for="POI2Radius"> radius = <span id="POI2Radius-value">…</span> </label>
+                <br>
+                <input type="range" min="1" max="300" id="POI2Radius">
+              </div>
             </div>
           </div>
           <div class="card" style="width: 20rem;">
@@ -39,20 +55,21 @@
               <p> Max </p>
             </div>
           </div>
-          <div class="card" style="width: 20rem;">
-            <div class="card-body">
-              <h4 class="card-title"> Instructions  </h4>
-              You may drag around the two circles representing the POI's (Points of Interest). These serve as filters and the map will only show points within these two circles. You may resize them using the sliders above.
-            </div>
-          </div> 
+         
         </div>
       </div>
     </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
     <script>
 
       // Set up size
       var mapWidth = 750;
       var mapHeight = 750;
+
+      var POI1Enabled = false;
+      var POI2Enabled = false;
 
       // Set up projection that the map is using
       var projection = d3.geoMercator()
@@ -166,6 +183,7 @@
 
 
       ////////// POI CODE START /////////
+      // Could probably make this more concise...
 
       // draw POI 1 
       var PointOfInterest1 = svg.append("circle")
@@ -198,9 +216,11 @@
         updatePOIRadius(+this.value, '#POI2Radius-value', '#POI2Radius', '#POI2');
       });
 
-      updatePOIRadius(80, '#POI1Radius-value', '#POI1Radius', '#POI1');
-      updatePOIRadius(80, '#POI2Radius-value', '#POI2Radius', '#POI2');
+      // set starting radius
+      updatePOIRadius(150, '#POI1Radius-value', '#POI1Radius', '#POI1');
+      updatePOIRadius(150, '#POI2Radius-value', '#POI2Radius', '#POI2');
 
+      // make POIs dragable
       svg.select("#POI1")
             .call(d3.drag()
               .on("start", dragstarted)
@@ -212,6 +232,38 @@
               .on("start", dragstarted)
               .on("drag", dragged)
               .on("end", dragended));
+
+      // Hide POIs initially
+      $("#POI1").hide();
+      $("#POI1InputContainer").hide();
+
+      $("#POI2").hide();
+      $("#POI2InputContainer").hide();
+
+      // update UI on toggle
+      $("#POI1Toggle").on("change", function() {
+        if (POI1Enabled) {
+         $("#POI1").hide(); 
+         $("#POI1InputContainer").hide();
+        }
+        else {
+         $("#POI1").show();
+         $("#POI1InputContainer").show(); 
+        }
+        POI1Enabled = !POI1Enabled;
+      });
+
+      $("#POI2Toggle").on("change", function() {
+        if (POI2Enabled) {
+         $("#POI2").hide();
+         $("#POI2InputContainer").hide(); 
+        }
+        else {
+         $("#POI2").show(); 
+         $("#POI2InputContainer").show();
+        }
+        POI2Enabled = !POI2Enabled;
+      });
 
       function updatePOIRadius(POIRadius, labelID, inputID, circleID) {
         // adjust the text on the range slider
@@ -251,8 +303,6 @@
 
 
     </script>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+    
   </body>
 </html>
