@@ -1,10 +1,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Tree Visualization</title>
+    <title>SF Tree Visualization</title>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
-
   </head>
   <body>
     <h1 align="center"> Trees in San Francisco</h1>
@@ -23,7 +22,6 @@
               <input type="range" min="1" max="150" id="POI1Radius">
             </div>
           </div>
-
           <div class="card" style="width: 20rem;">
             <div class="card-body">
               <h4 class="card-title">Point of Interest 2</h4>
@@ -32,23 +30,21 @@
               <input type="range" min="1" max="150" id="POI2Radius">
             </div>
           </div>
-
           <div class="card" style="width: 20rem;">
             <div class="card-body">
               <h4 class="card-title"> Input DBH Range  </h4>
-              <input type="number" id="DBHRangeMin" placeholder="Min">
-              <input type="number" id="DBHRangeMax" placeholder="Max">
+              <input type="number" id="DBHRangeMin">
+              <p> Min </p>
+              <input type="number" id="DBHRangeMax">
+              <p> Max </p>
             </div>
           </div>
-
           <div class="card" style="width: 20rem;">
             <div class="card-body">
               <h4 class="card-title"> Instructions  </h4>
               You may drag around the two circles representing the POI's (Points of Interest). These serve as filters and the map will only show points within these two circles. You may resize them using the sliders above.
             </div>
-          </div>
-
-
+          </div> 
         </div>
       </div>
     </div>
@@ -177,8 +173,8 @@
 
       ////////// POI CODE START /////////
 
-      // draw POI 1
-      var PointOfInteret1 = svg.append("circle")
+      // draw POI 1 
+      var PointOfInterest1 = svg.append("circle")
         .attr("cx", 300)
         .attr("cy", 150)
         .style("fill", "blue")
@@ -189,7 +185,7 @@
         .attr("id", function(d){ return "POI1"; })
 
       // draw POI 2
-      var PointOfInteret2 = svg.append("circle")
+      var PointOfInterest2 = svg.append("circle")
         .attr("cx", 200)
         .attr("cy", 75)
         .style("fill", "blue")
