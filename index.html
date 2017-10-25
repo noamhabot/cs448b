@@ -86,12 +86,17 @@
       $("#root-svg").css({"display" : "block", "margin" : "auto"});
 
       // Add SVG map at correct size, assuming map is saved in a subdirectory called `data`
-      svg.append('image')
+      var image = svg.append('image')
         .attr('width', mapWidth)
         .attr('height', mapHeight)
-        .attr('xlink:href', 'sf-map.svg')
-          //.call(d3.zoom().scaleExtent([1,50]).on("zoom",
-            //function () { svg.attr("transform", d3.event.transform) }));
+        .attr('xlink:href', 'sf-map.svg');
+
+      svg.call(d3.zoom().scaleExtent([1,10]).on("zoom",function() {
+            image.attr("transform", d3.event.transform);
+            plot.attr("transform", d3.event.transform);
+            svg.select("#POI1").attr("transform", d3.event.transform);
+            svg.select("#POI2").attr("transform", d3.event.transform);
+          }));
 
 
 
