@@ -18,7 +18,7 @@
             <h4 class="card-title"> Instructions  </h4>
             You may drag around the two circles representing the POI's (Points of Interest). These serve as filters and the map will only show points within these two circles. You may resize them using the sliders below.
           </div>
-        </div> 
+        </div>
         <div class="card" style="width: 20rem;">
           <div class="card-body">
             <h4 class="card-title">Point of Interest 1</h4>
@@ -38,7 +38,7 @@
             <label for="POI2Toggle"> enable </label>
             <input id="POI2Toggle" type="checkbox">
             <br>
-            <div id="POI2InputContainer">              
+            <div id="POI2InputContainer">
               <label for="POI2Radius"> radius = <span id="POI2Radius-value">…</span> </label>
               <br>
               <input type="range" min="1" max="300" id="POI2Radius">
@@ -48,9 +48,9 @@
         <div class="card" style="width: 20rem;">
           <div class="card-body">
             <h4 class="card-title"> DBH Range  </h4>
-            <input type="number" id="DBHRangeMin">
+            <input type="number" id="DBHRangeMin" value="0" min="0" max="135">
             <p> Min </p>
-            <input type="number" id="DBHRangeMax">
+            <input type="number" id="DBHRangeMax" value="100" min="1" max="140">
             <p> Max </p>
           </div>
         </div>
@@ -74,15 +74,15 @@
         .scale(225000)
         .translate([mapWidth / 2, mapHeight / 2]);
 
-      console.log(projection);
+
 
       // Add an SVG element to the DOM
       var svg = d3.select('#svg-container').append('svg')
         .attr('width', mapWidth)
         .attr('height', mapHeight)
         .attr("id", function(d){ return "root-svg"; })
-      
-      // Center svg in parent container   
+
+      // Center svg in parent container
       $("#root-svg").css({"display" : "block", "margin" : "auto"});
 
       // Add SVG map at correct size, assuming map is saved in a subdirectory called `data`
@@ -92,6 +92,9 @@
         .attr('xlink:href', 'sf-map.svg')
           //.call(d3.zoom().scaleExtent([1,50]).on("zoom",
             //function () { svg.attr("transform", d3.event.transform) }));
+
+
+
 
       let plot = svg.append('g').attr('transform', `translate(0,0)`);
 
@@ -118,35 +121,21 @@
       function loadData (error, data) {
         if (error) throw error; // Runs if there's a problem fetching the csv.
 
-        // data looks like
-        // [
-        //   {TreeID: "", qSpecies: 10, qAddress: 3},
-        //   ...
-        // ]
-
         // Draw the initial scatter plot
         drawScatterPlot(data);
         treeData = data;
-        // Set up event handlers for our buttons.
-        // You could also do this with plain JavaScript!
-        // e.g. document.querySelectorAll('button') ... addEventListener ...
-        // D3 just provides convenient methods for operating on DOM nodes
-        // through its selections
-        // let ranges = d3.selectAll('input');
-        // ranges.on('change', function() {
-        //   // When you write a function for a D3 selection with multiple nodes
-        //   // `this` refers to the current DOM node
-        //   let chosenAnimal = this.dataset.filter; // value of `data-filter` attr
-        //   let filteredData;
-        //   if (chosenAnimal === 'both') {
-        //     filteredData = animalData;
-        //   } else {
-        //     filteredData = animalData.filter( d => d.animal === chosenAnimal );
-        //   }
-        //   drawScatterPlot(data);
-          
-        // });
+
+        ////////// Handling DBH filtering CODE START /////////
+
+        d3.select('#DBHRangeMin').on("change", function() {filterByPOI();} );
+        d3.select('#DBHRangeMax').on("change", function() {filterByPOI();} );
+
+        // on initialization, do this as well.
+
+        ////////// Handling DBH filtering CODE END /////////////
+        filterByPOI();
       }
+
 
       function drawScatterPlot(data) {
         // Create a selection of circles in our plot (empty on the first go)
@@ -154,20 +143,7 @@
         // Bind our animal data to the circles, using the "id" field as our key
         let updatedCircles = circles.data(data, d => d.TreeID);
 
-        // Could also set the key to "name"!
-        // The key for each datapoint can be anything, ideally a unique feature of each datum.
-        // If we already have circles that have data joined, D3 will compare the keys
-        // of each of those with the keys of the joined data to see:
-        // * Does our dataset have datums that aren't already represented by nodes? (we can `enter` these)
-        // * Are there nodes which no longer have corresponding datums in the dataset? (we can `exit` these)
-        // * Are there nodes whose keys match the keys of the dataset? (these are the `update` selection)
-        // By default, D3 uses the index in the data array, in our example that won't work.
 
-        // We'll use "enter" to make circles for new datapoints
-        // From https://github.com/d3/d3-selection#selection_enter :
-        // "The enter selection is typically used to create 'missing' elements corresponding to new data."
-        // "[The selection comprises] placeholder nodes for each datum that had no corresponding DOM element in the selection."
-        // "Conceptually, the enter selection’s placeholders are pointers to the parent element"
         let enterSelection = updatedCircles.enter();
         //let projectedLocation = projection([d.Longitude, d.Latitude]); // [treeLon, treeLat]);
 
@@ -183,6 +159,8 @@
         // And we'll remove those nodes form the DOM - poof!
         updatedCircles.exit().remove();
       }
+
+
 
 
       ////////// POI CODE START /////////
@@ -225,6 +203,8 @@
       updatePOIRadius(150, '#POI1Radius-value', '#POI1Radius', '#POI1');
       updatePOIRadius(150, '#POI2Radius-value', '#POI2Radius', '#POI2');
 
+
+
       // make POIs dragable
       svg.select("#POI1")
             .call(d3.drag()
@@ -245,7 +225,7 @@
       $("#POI2").hide();
       $("#POI2InputContainer").hide();
 
-      // update UI on toggle 
+      // update UI on toggle
       $("#POI1Toggle").on("change", function() {
         if (POI1Enabled) {
          $("#POI1").hide();
@@ -272,19 +252,29 @@
         filterByPOI();
       });
 
-      function pointInRange(POICoords, POIRadius, tree) {
+      function pointInDBH(min, max, tree) {
+        return min <= tree.DBH && max >= tree.DBH;
+      }
+
+      function pointInRange(POICoords, POIRadius, min, max, tree) {
         var a = POICoords[0] - tree.Xcoord;
         var b = POICoords[1] - tree.Ycoord;
         var distance = Math.sqrt( a*a + b*b );
-        return distance <= POIRadius;
+
+        return (distance <= POIRadius && pointInDBH(min, max, tree));
       }
 
-      function pointInUnion(POI1Coords, POI2Coords, POI1Radius, POI2Radius, tree) {
-        return pointInRange(POI1Coords, POI1Radius, tree) && pointInRange(POI2Coords, POI2Radius, tree);
+      function pointInUnion(POI1Coords, POI2Coords, POI1Radius, POI2Radius, min, max, tree) {
+        return pointInRange(POI1Coords, POI1Radius, min, max, tree) && pointInRange(POI2Coords, POI2Radius, min, max, tree);
       }
 
       function filterByPOI() {
+
+
         var filteredData = treeData;
+
+        var min = d3.select('#DBHRangeMin').property("value");
+        var max = d3.select('#DBHRangeMax').property("value");
 
         var POI1Coords = [$("#POI1").attr("cx"), $("#POI1").attr("cy")];
         var POI2Coords = [$("#POI2").attr("cx"), $("#POI2").attr("cy")];
@@ -292,22 +282,26 @@
         var POI1Radius = $("#POI1").attr("r");
         var POI2Radius = $("#POI2").attr("r");
 
-        if (POI1Enabled && !POI2Enabled) 
+        if (POI1Enabled && !POI2Enabled)
         {
           filteredData = treeData.filter(
-            pointInRange.bind(this, POI1Coords, POI1Radius));
-        } 
-        else if (!POI1Enabled && POI2Enabled) 
+            pointInRange.bind(this, POI1Coords, POI1Radius, min, max));
+        }
+        else if (!POI1Enabled && POI2Enabled)
         {
           filteredData = treeData.filter(
-            pointInRange.bind(this, POI2Coords, POI2Radius));
-        } 
-        else if (POI1Enabled && POI2Enabled) 
+            pointInRange.bind(this, POI2Coords, POI2Radius, min, max));
+        }
+        else if (POI1Enabled && POI2Enabled)
         {
           filteredData = treeData.filter(
-            pointInUnion.bind(this, POI1Coords, POI2Coords, POI1Radius, POI2Radius));  
-        } 
-        else {}
+            pointInUnion.bind(this, POI1Coords, POI2Coords, POI1Radius, POI2Radius, min, max));
+        }
+        else
+        {
+          filteredData = treeData.filter(
+            pointInDBH.bind(this, min, max));
+        }
 
         drawScatterPlot(filteredData)
       }
@@ -345,6 +339,8 @@
       }
 
       ////////// POI CODE END /////////////
+
+
     </script>
   </body>
 </html>
