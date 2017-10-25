@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="col-3">
-         <div class="card" style="width: 20rem;">
+        <div class="card" style="width: 20rem;">
           <div class="card-body">
             <h4 class="card-title"> Instructions  </h4>
             You may drag around the two circles representing the POI's (Points of Interest). These serve as filters and the map will only show points within these two circles. You may resize them using the sliders below.
@@ -187,10 +187,10 @@
       ////////// POI CODE START /////////
       // Could probably make this more concise...
 
-      // draw POI 1 
+      // draw POI 1
       var PointOfInterest1 = svg.append("circle")
-        .attr("cx", 300)
-        .attr("cy", 150)
+        .attr("cx", 350)
+        .attr("cy", 350)
         .style("fill", "blue")
         .style("stroke", "blue")
         .style("fill-opacity", .01)
@@ -200,8 +200,8 @@
 
       // draw POI 2
       var PointOfInterest2 = svg.append("circle")
-        .attr("cx", 200)
-        .attr("cy", 75)
+        .attr("cx", 450)
+        .attr("cy", 450)
         .style("fill", "blue")
         .style("stroke", "blue")
         .style("fill-opacity", .01)
@@ -245,12 +245,12 @@
       // update UI on toggle
       $("#POI1Toggle").on("change", function() {
         if (POI1Enabled) {
-         $("#POI1").hide(); 
+         $("#POI1").hide();
          $("#POI1InputContainer").hide();
         }
         else {
          $("#POI1").show();
-         $("#POI1InputContainer").show(); 
+         $("#POI1InputContainer").show();
         }
         POI1Enabled = !POI1Enabled;
       });
@@ -258,10 +258,10 @@
       $("#POI2Toggle").on("change", function() {
         if (POI2Enabled) {
          $("#POI2").hide();
-         $("#POI2InputContainer").hide(); 
+         $("#POI2InputContainer").hide();
         }
         else {
-         $("#POI2").show(); 
+         $("#POI2").show();
          $("#POI2InputContainer").show();
         }
         POI2Enabled = !POI2Enabled;
@@ -304,6 +304,6 @@
 
 
     </script>
-    
+
   </body>
 </html>
