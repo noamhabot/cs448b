@@ -74,6 +74,8 @@
         .scale(225000)
         .translate([mapWidth / 2, mapHeight / 2]);
 
+      console.log(projection);
+
       // Add an SVG element to the DOM
       var svg = d3.select('#svg-container').append('svg')
         .attr('width', mapWidth)
@@ -92,6 +94,8 @@
             //function () { svg.attr("transform", d3.event.transform) }));
 
       let plot = svg.append('g').attr('transform', `translate(0,0)`);
+
+      var treeData;
 
       d3.csv('trees.csv', parseInputRow, loadData);
 
@@ -122,26 +126,26 @@
 
         // Draw the initial scatter plot
         drawScatterPlot(data);
-
+        treeData = data;
         // Set up event handlers for our buttons.
         // You could also do this with plain JavaScript!
         // e.g. document.querySelectorAll('button') ... addEventListener ...
         // D3 just provides convenient methods for operating on DOM nodes
         // through its selections
-        let ranges = d3.selectAll('input');
-        ranges.on('change', function() {
-          // When you write a function for a D3 selection with multiple nodes
-          // `this` refers to the current DOM node
-          console.log("change");
-          /*let chosenAnimal = this.dataset.filter; // value of `data-filter` attr
-          let filteredData;
-          if (chosenAnimal === 'both') {
-            filteredData = animalData;
-          } else {
-            filteredData = animalData.filter( d => d.animal === chosenAnimal );
-          }*/
-          drawScatterPlot(data);
-        });
+        // let ranges = d3.selectAll('input');
+        // ranges.on('change', function() {
+        //   // When you write a function for a D3 selection with multiple nodes
+        //   // `this` refers to the current DOM node
+        //   let chosenAnimal = this.dataset.filter; // value of `data-filter` attr
+        //   let filteredData;
+        //   if (chosenAnimal === 'both') {
+        //     filteredData = animalData;
+        //   } else {
+        //     filteredData = animalData.filter( d => d.animal === chosenAnimal );
+        //   }
+        //   drawScatterPlot(data);
+          
+        // });
       }
 
       function drawScatterPlot(data) {
@@ -167,14 +171,11 @@
         let enterSelection = updatedCircles.enter();
         //let projectedLocation = projection([d.Longitude, d.Latitude]); // [treeLon, treeLat]);
 
-
         var circle = enterSelection.append('circle')
           .attr('cx', function (d) { return d.Xcoord; })
           .attr('cy', function (d) { return d.Ycoord; })
           .attr('r', 0.5)
           .attr('fill', "green");
-
-
 
         // Now we'll select all the circles that no longer
         // have any corresponding data after the data join
@@ -194,7 +195,7 @@
         .style("fill", "blue")
         .style("stroke", "blue")
         .style("fill-opacity", .01)
-        .datum({x: 300, y: 350})
+        .datum({x: 350, y: 350})
         .attr("r", 150)
         .attr("id", function(d){ return "POI1"; })
 
@@ -212,10 +213,12 @@
       // when the input range changes update POI radius
       d3.select("#POI1Radius").on("input", function() {
         updatePOIRadius(+this.value, '#POI1Radius-value', '#POI1Radius', '#POI1');
+        filterByPOI();
       });
 
       d3.select("#POI2Radius").on("input", function() {
         updatePOIRadius(+this.value, '#POI2Radius-value', '#POI2Radius', '#POI2');
+        filterByPOI();
       });
 
       // set starting radius
@@ -242,7 +245,7 @@
       $("#POI2").hide();
       $("#POI2InputContainer").hide();
 
-      // update UI on toggle
+      // update UI on toggle 
       $("#POI1Toggle").on("change", function() {
         if (POI1Enabled) {
          $("#POI1").hide();
@@ -253,6 +256,7 @@
          $("#POI1InputContainer").show();
         }
         POI1Enabled = !POI1Enabled;
+        filterByPOI();
       });
 
       $("#POI2Toggle").on("change", function() {
@@ -265,7 +269,48 @@
          $("#POI2InputContainer").show();
         }
         POI2Enabled = !POI2Enabled;
+        filterByPOI();
       });
+
+      function pointInRange(POICoords, POIRadius, tree) {
+        var a = POICoords[0] - tree.Xcoord;
+        var b = POICoords[1] - tree.Ycoord;
+        var distance = Math.sqrt( a*a + b*b );
+        return distance <= POIRadius;
+      }
+
+      function pointInUnion(POI1Coords, POI2Coords, POI1Radius, POI2Radius, tree) {
+        return pointInRange(POI1Coords, POI1Radius, tree) && pointInRange(POI2Coords, POI2Radius, tree);
+      }
+
+      function filterByPOI() {
+        var filteredData = treeData;
+
+        var POI1Coords = [$("#POI1").attr("cx"), $("#POI1").attr("cy")];
+        var POI2Coords = [$("#POI2").attr("cx"), $("#POI2").attr("cy")];
+
+        var POI1Radius = $("#POI1").attr("r");
+        var POI2Radius = $("#POI2").attr("r");
+
+        if (POI1Enabled && !POI2Enabled) 
+        {
+          filteredData = treeData.filter(
+            pointInRange.bind(this, POI1Coords, POI1Radius));
+        } 
+        else if (!POI1Enabled && POI2Enabled) 
+        {
+          filteredData = treeData.filter(
+            pointInRange.bind(this, POI2Coords, POI2Radius));
+        } 
+        else if (POI1Enabled && POI2Enabled) 
+        {
+          filteredData = treeData.filter(
+            pointInUnion.bind(this, POI1Coords, POI2Coords, POI1Radius, POI2Radius));  
+        } 
+        else {}
+
+        drawScatterPlot(filteredData)
+      }
 
       function updatePOIRadius(POIRadius, labelID, inputID, circleID) {
         // adjust the text on the range slider
@@ -291,6 +336,7 @@
         d3.select(this)
           .attr("cx", d.x = d3.event.x)
           .attr("cy", d.y = d3.event.y);
+        filterByPOI();
       }
 
       function dragended(d) {
@@ -299,11 +345,6 @@
       }
 
       ////////// POI CODE END /////////////
-
-
-
-
     </script>
-
   </body>
 </html>
