@@ -7,55 +7,52 @@
   </head>
   <body>
     <h1 align="center"> Trees in San Francisco</h1>
-    <div class="container">
-      <div class="row">
-        <div class="col-9">
-          <div id="svg-container">
+    <div class="row">
+      <div class="col-9">
+        <div id="svg-container">
+        </div>
+      </div>
+      <div class="col-3">
+         <div class="card" style="width: 20rem;">
+          <div class="card-body">
+            <h4 class="card-title"> Instructions  </h4>
+            You may drag around the two circles representing the POI's (Points of Interest). These serve as filters and the map will only show points within these two circles. You may resize them using the sliders below.
+          </div>
+        </div> 
+        <div class="card" style="width: 20rem;">
+          <div class="card-body">
+            <h4 class="card-title">Point of Interest 1</h4>
+            <label for="POI1Toggle"> enable </label>
+            <input id="POI1Toggle" type="checkbox">
+            <br>
+            <div id="POI1InputContainer">
+              <label for="POI1Radius"> radius = <span id="POI1Radius-value">…</span> </label>
+              <br>
+              <input type="range" min="1" max="300" id="POI1Radius">
+            </div>
           </div>
         </div>
-        <div class="col-3">
-           <div class="card" style="width: 20rem;">
-            <div class="card-body">
-              <h4 class="card-title"> Instructions  </h4>
-              You may drag around the two circles representing the POI's (Points of Interest). These serve as filters and the map will only show points within these two circles. You may resize them using the sliders below.
-            </div>
-          </div> 
-          <div class="card" style="width: 20rem;">
-            <div class="card-body">
-              <h4 class="card-title">Point of Interest 1</h4>
-              <label for="POI1Toggle"> enable </label>
-              <input id="POI1Toggle" type="checkbox">
+        <div class="card" style="width: 20rem;">
+          <div class="card-body">
+            <h4 class="card-title">Point of Interest 2</h4>
+            <label for="POI2Toggle"> enable </label>
+            <input id="POI2Toggle" type="checkbox">
+            <br>
+            <div id="POI2InputContainer">              
+              <label for="POI2Radius"> radius = <span id="POI2Radius-value">…</span> </label>
               <br>
-              <div id="POI1InputContainer">
-                <label for="POI1Radius"> radius = <span id="POI1Radius-value">…</span> </label>
-                <br>
-                <input type="range" min="1" max="300" id="POI1Radius">
-              </div>
+              <input type="range" min="1" max="300" id="POI2Radius">
             </div>
           </div>
-          <div class="card" style="width: 20rem;">
-            <div class="card-body">
-              <h4 class="card-title">Point of Interest 2</h4>
-              <label for="POI2Toggle"> enable </label>
-              <input id="POI2Toggle" type="checkbox">
-              <br>
-              <div id="POI2InputContainer">              
-                <label for="POI2Radius"> radius = <span id="POI2Radius-value">…</span> </label>
-                <br>
-                <input type="range" min="1" max="300" id="POI2Radius">
-              </div>
-            </div>
+        </div>
+        <div class="card" style="width: 20rem;">
+          <div class="card-body">
+            <h4 class="card-title"> DBH Range  </h4>
+            <input type="number" id="DBHRangeMin">
+            <p> Min </p>
+            <input type="number" id="DBHRangeMax">
+            <p> Max </p>
           </div>
-          <div class="card" style="width: 20rem;">
-            <div class="card-body">
-              <h4 class="card-title"> Input DBH Range  </h4>
-              <input type="number" id="DBHRangeMin">
-              <p> Min </p>
-              <input type="number" id="DBHRangeMax">
-              <p> Max </p>
-            </div>
-          </div>
-         
         </div>
       </div>
     </div>
@@ -80,20 +77,19 @@
       // Add an SVG element to the DOM
       var svg = d3.select('#svg-container').append('svg')
         .attr('width', mapWidth)
-        .attr('height', mapHeight);
-
-
-
+        .attr('height', mapHeight)
+        .attr("id", function(d){ return "root-svg"; })
+      
+      // Center svg in parent container   
+      $("#root-svg").css({"display" : "block", "margin" : "auto"});
 
       // Add SVG map at correct size, assuming map is saved in a subdirectory called `data`
       svg.append('image')
         .attr('width', mapWidth)
         .attr('height', mapHeight)
-        .attr('xlink:href', 'sf-map.svg');
+        .attr('xlink:href', 'sf-map.svg')
           //.call(d3.zoom().scaleExtent([1,50]).on("zoom",
             //function () { svg.attr("transform", d3.event.transform) }));
-
-
 
       let plot = svg.append('g').attr('transform', `translate(0,0)`);
 
@@ -120,8 +116,7 @@
 
         // data looks like
         // [
-        //   {TreeID: "cat", qSpecies: 10, qAddress: 3},
-        //   {animal: "cat", weight: 3, height: 3},
+        //   {TreeID: "", qSpecies: 10, qAddress: 3},
         //   ...
         // ]
 
@@ -176,7 +171,8 @@
         var circle = enterSelection.append('circle')
           .attr('cx', function (d) { return d.Xcoord; })
           .attr('cy', function (d) { return d.Ycoord; })
-          .attr('r', 0.5);
+          .attr('r', 0.5)
+          .attr('fill', "green");
 
 
 
@@ -303,7 +299,6 @@
       }
 
       ////////// POI CODE END /////////////
-
 
 
 
