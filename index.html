@@ -17,7 +17,10 @@
         <div class="card" style="width: 20rem;">
           <div class="card-body">
             <h4 class="card-title"> Instructions  </h4>
-            You may drag around the two circles representing the POI's (Points of Interest). These serve as filters and the map will only show points within these two circles. You may resize them using the sliders below.
+            <p> The visualization to the left shows all the trees in San Francisco. You can enable points of interest as well as specify their radii to view all trees within that area. You can also pan and zoom the map to see the trees data in finer detail. Additionally, you can filter by diameter and breast height. <p>
+            <label for="DataSetToggle"> Enable full data-set </label>
+            <input id="DataSetToggle" type="checkbox"> 
+            <p> <i> Note: Using the full data-set increases lag due to large number of records. Please allow a few seconds for full dataset to load. <i> </p>
           </div>
         </div>
         <div class="card" style="width: 20rem;">
@@ -73,14 +76,13 @@
 
       var POI1Enabled = false;
       var POI2Enabled = false;
+      var fullDataSet = false;
 
       // Set up projection that the map is using
       var projection = d3.geoMercator()
         .center([-122.433701, 37.767683]) // San Francisco, roughly
         .scale(225000)
         .translate([mapWidth / 2, mapHeight / 2]);
-
-
 
       // Add an SVG element to the DOM
       var svg = d3.select('#svg-container').append('svg')
@@ -105,13 +107,23 @@
           }));
 
 
-
-
       let plot = svg.append('g').attr('transform', `translate(0,0)`);
+
+      d3.select('#DataSetToggle').on("change", 
+        function() {
+          fullDataSet = !fullDataSet;
+          startVisualization();
+        });
 
       var treeData;
 
-      d3.csv('trees.csv', parseInputRow, loadData);
+      startVisualization();
+
+      function startVisualization() {
+        d3.csv(fullDataSet ? 'Street_Tree_List.csv' :'trees.csv', parseInputRow, loadData);
+      }
+
+      
 
       // Convert weight and height from strings to numbers
       function parseInputRow (d) {
@@ -171,9 +183,6 @@
         updatedCircles.exit().remove();
       }
 
-
-
-
       ////////// POI CODE START /////////
       // Could probably make this more concise...
 
@@ -213,8 +222,6 @@
       // set starting radius
       updatePOIRadius(150, '#POI1Radius-value', '#POI1Radius', '#POI1');
       updatePOIRadius(150, '#POI2Radius-value', '#POI2Radius', '#POI2');
-
-
 
       // make POIs dragable
       svg.select("#POI1")
@@ -298,8 +305,6 @@
           console.log(min);
           console.log(max);
         }
-
-        
 
         var POI1Coords = [$("#POI1").attr("cx"), $("#POI1").attr("cy")];
         var POI2Coords = [$("#POI2").attr("cx"), $("#POI2").attr("cy")];
