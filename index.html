@@ -4,6 +4,7 @@
     <title>SF Tree Visualization</title>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="styles.css">
   </head>
   <body>
     <h1 align="center"> Trees in San Francisco</h1>
@@ -47,10 +48,13 @@
         </div>
         <div class="card" style="width: 20rem;">
           <div class="card-body">
-            <h4 class="card-title"> DBH Range  </h4>
-            <input type="number" id="DBHRangeMin" value="0" min="0" max="135">
+            <h4 class="card-title"> DBH Range: [0,140]  </h4>
+            <div id="error-message-container">
+              <p class="error-message"> DBH Min cannot be greater than DBH Max </p>
+            </div>
+            <input type="number" id="DBHRangeMin" value="0" min="0" max="140">
             <p> Min </p>
-            <input type="number" id="DBHRangeMax" value="100" min="1" max="140">
+            <input type="number" id="DBHRangeMax" value="140" min="0" max="140">
             <p> Max </p>
             DBH is the Diameter Breast Height of the tree.<br>
             Press enter after updating the fields.
@@ -229,6 +233,9 @@
       $("#POI1").hide();
       $("#POI1InputContainer").hide();
 
+      // Hide error message initially 
+      $("#error-message-container").hide();
+
       $("#POI2").hide();
       $("#POI2InputContainer").hide();
 
@@ -283,6 +290,17 @@
         var min = d3.select('#DBHRangeMin').property("value");
         var max = d3.select('#DBHRangeMax').property("value");
 
+        if (+min > +max) {
+          $("#error-message-container").show();
+        }
+        else {
+          $("#error-message-container").hide();
+          console.log(min);
+          console.log(max);
+        }
+
+        
+
         var POI1Coords = [$("#POI1").attr("cx"), $("#POI1").attr("cy")];
         var POI2Coords = [$("#POI2").attr("cx"), $("#POI2").attr("cy")];
 
@@ -334,9 +352,7 @@
 
       function updatePOIRadius(POIRadius, labelID, inputID, circleID) {
         // adjust the text on the range slider
-        // will need to convert units to miles
-        console.log([svg.select(circleID).attr("cx"), svg.select(circleID).attr("cy")]);
-        console.log(POIRadius);
+        // converts units to miles
         var p1 = projection.invert([0,0]);
         var p2 = projection.invert([0,POIRadius]);
         var newText = String(parseFloat(Math.round(getDistanceFromLatLonInMiles(p1[1],p1[0],p2[1],p2[0]) * 100) / 100).toFixed(2)) + " miles";
