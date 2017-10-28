@@ -19,7 +19,7 @@
             <h4 class="card-title"> Instructions  </h4>
             <p> The visualization to the left shows all the trees in San Francisco. You can enable points of interest as well as specify their radii to view all trees within that area. You can also pan and zoom the map to see the trees data in finer detail. Additionally, you can filter by diameter and breast height. <p>
             <label for="DataSetToggle"> Enable full data-set </label>
-            <input id="DataSetToggle" type="checkbox"> 
+            <input id="DataSetToggle" type="checkbox">
             <p> <i> Note: Using the full data-set increases lag due to large number of records. Please allow a few seconds for full dataset to load. <i> </p>
           </div>
         </div>
@@ -99,31 +99,37 @@
         .attr('height', mapHeight)
         .attr('xlink:href', 'sf-map.svg');
 
+      // Create a plot element
+      let plot = svg.append('g').attr('transform', `translate(0,0)`);
+
+
+      // Create a new variable "treeData" that will hold
+      // all of the data and load it with D3
+      var treeData;
+      startVisualization();
+      function startVisualization() {
+        d3.csv(fullDataSet ? 'Street_Tree_List.csv' :'trees.csv', parseInputRow, loadData);
+      }
+
+
+      // Add the zoom feature to the plot and circles
       svg.call(d3.zoom().scaleExtent([1,10]).on("zoom",function() {
             image.attr("transform", d3.event.transform);
             plot.attr("transform", d3.event.transform);
             svg.select("#POI1").attr("transform", d3.event.transform);
             svg.select("#POI2").attr("transform", d3.event.transform);
           }));
-
-
-      let plot = svg.append('g').attr('transform', `translate(0,0)`);
-
-      d3.select('#DataSetToggle').on("change", 
+      // Add the on change function for if we want to change datasets
+      d3.select('#DataSetToggle').on("change",
         function() {
           fullDataSet = !fullDataSet;
           startVisualization();
         });
 
-      var treeData;
+        // Hide error message initially
+        $("#error-message-container").hide();
 
-      startVisualization();
-
-      function startVisualization() {
-        d3.csv(fullDataSet ? 'Street_Tree_List.csv' :'trees.csv', parseInputRow, loadData);
-      }
-
-      
+      // Here are some functions that help process the data
 
       // Convert weight and height from strings to numbers
       function parseInputRow (d) {
@@ -143,23 +149,17 @@
 
       function loadData (error, data) {
         if (error) throw error; // Runs if there's a problem fetching the csv.
-
         // Draw the initial scatter plot
         drawScatterPlot(data);
         treeData = data;
-
         ////////// Handling DBH filtering CODE START /////////
-
         d3.select('#DBHRangeMin').on("change", function() {filterByPOI();} );
         d3.select('#DBHRangeMax').on("change", function() {filterByPOI();} );
-
-        // on initialization, do this as well.
-
         ////////// Handling DBH filtering CODE END /////////////
         filterByPOI();
       }
 
-
+      // Plots the data onto the screen
       function drawScatterPlot(data) {
         // Create a selection of circles in our plot (empty on the first go)
         let circles = plot.selectAll('circle');
@@ -240,9 +240,6 @@
       $("#POI1").hide();
       $("#POI1InputContainer").hide();
 
-      // Hide error message initially 
-      $("#error-message-container").hide();
-
       $("#POI2").hide();
       $("#POI2InputContainer").hide();
 
@@ -273,6 +270,7 @@
         filterByPOI();
       });
 
+      // ----- The following few functions are for helping to filter the POI -------
       function pointInDBH(min, max, tree) {
         return min <= tree.DBH && max >= tree.DBH;
       }
@@ -290,8 +288,6 @@
       }
 
       function filterByPOI() {
-
-
         var filteredData = treeData;
 
         var min = d3.select('#DBHRangeMin').property("value");
@@ -312,27 +308,19 @@
         var POI1Radius = $("#POI1").attr("r");
         var POI2Radius = $("#POI2").attr("r");
 
-        if (POI1Enabled && !POI2Enabled)
-        {
+        if (POI1Enabled && !POI2Enabled) {
           filteredData = treeData.filter(
             pointInRange.bind(this, POI1Coords, POI1Radius, min, max));
-        }
-        else if (!POI1Enabled && POI2Enabled)
-        {
+        } else if (!POI1Enabled && POI2Enabled) {
           filteredData = treeData.filter(
             pointInRange.bind(this, POI2Coords, POI2Radius, min, max));
-        }
-        else if (POI1Enabled && POI2Enabled)
-        {
+        } else if (POI1Enabled && POI2Enabled) {
           filteredData = treeData.filter(
             pointInUnion.bind(this, POI1Coords, POI2Coords, POI1Radius, POI2Radius, min, max));
-        }
-        else
-        {
+        } else {
           filteredData = treeData.filter(
             pointInDBH.bind(this, min, max));
         }
-
         drawScatterPlot(filteredData)
       }
 
@@ -363,11 +351,9 @@
         var newText = String(parseFloat(Math.round(getDistanceFromLatLonInMiles(p1[1],p1[0],p2[1],p2[0]) * 100) / 100).toFixed(2)) + " miles";
 
 
+        // Update the text field and the value of the POI slider
         d3.select(labelID)
           .text(newText);
-
-
-
         d3.select(inputID)
           .property("value", POIRadius);
 
